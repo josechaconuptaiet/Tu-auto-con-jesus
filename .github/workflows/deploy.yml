@@ -1,0 +1,19 @@
+name: Deploy test
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Subir archivos
+        uses: actions/checkout@v4
+      - name: Sincronizar con el hosting compartido
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          erver-dir: /rifacandela.site/
