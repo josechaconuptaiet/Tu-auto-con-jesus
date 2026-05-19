@@ -950,10 +950,22 @@ h6 {
     }
 }
 
-.calc-inputs input[type="range"] {
+.calc-inputs input[type="text"],
+.calc-inputs input[type="number"] {
     width: 100%;
-    margin-top: 10px;
-    accent-color: var(--primary-color);
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.calc-inputs input[type="text"]:focus,
+.calc-inputs input[type="number"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.1);
+    outline: none;
 }
 
 .calc-results {

@@ -390,16 +390,16 @@
              <div class="calc-layout">
                  <div class="calc-inputs">
                      <div class="form-group">
-                         <label>Precio del Vehículo: $<span id="val_price"><?= $default_price ?></span></label>
-                         <input type="range" id="calc_price" min="<?= $min_price ?>" max="<?= $max_price ?>" step="500" value="<?= $default_price ?>" oninput="updateCalculator()">
+                         <label>Precio del Vehículo ($)</label>
+                         <input type="text" id="calc_price" inputmode="numeric" min="<?= $min_price ?>" max="<?= $max_price ?>" value="<?= number_format($default_price) ?>" oninput="updateCalculator()" onfocus="this.value=this.value.replace(/,/g,'')" onblur="formatCalcInput(this)">
                      </div>
                      <div class="form-group">
-                         <label>Enganche: $<span id="val_downpayment"><?= $default_downpayment ?></span></label>
-                         <input type="range" id="calc_downpayment" min="<?= $min_downpayment ?>" max="<?= $max_downpayment ?>" step="500" value="<?= $default_downpayment ?>" oninput="updateCalculator()">
+                         <label>Enganche ($)</label>
+                         <input type="text" id="calc_downpayment" inputmode="numeric" min="<?= $min_downpayment ?>" max="<?= $max_downpayment ?>" value="<?= number_format($default_downpayment) ?>" oninput="updateCalculator()" onfocus="this.value=this.value.replace(/,/g,'')" onblur="formatCalcInput(this)">
                      </div>
                      <div class="form-group">
-                         <label>Tasa de Interés (APR): <span id="val_apr"><?= $default_apr ?></span>%</label>
-                         <input type="range" id="calc_apr" min="1" max="25" step="0.5" value="<?= $default_apr ?>" oninput="updateCalculator()">
+                         <label>Tasa de Interés (APR %)</label>
+                         <input type="number" id="calc_apr" min="0" max="100" step="0.5" value="<?= $default_apr ?>" oninput="updateCalculator()">
                      </div>
                      <div class="form-group">
                          <label>Plazo del Préstamo (Meses)</label>
@@ -657,15 +657,24 @@
     }
 
     /* Calculator Logic */
-    function updateCalculator() {
-        const price = parseFloat(document.getElementById('calc_price').value);
-        const downpayment = parseFloat(document.getElementById('calc_downpayment').value);
-        const apr = parseFloat(document.getElementById('calc_apr').value);
-        const term = parseInt(document.getElementById('calc_term').value);
+    function formatCalcInput(el) {
+        const raw = el.value.replace(/,/g, '');
+        const num = parseFloat(raw);
+        if (!isNaN(num)) {
+            el.value = num.toLocaleString('en-US');
+        }
+    }
 
-        document.getElementById('val_price').innerText = price.toLocaleString();
-        document.getElementById('val_downpayment').innerText = downpayment.toLocaleString();
-        document.getElementById('val_apr').innerText = apr;
+    function getCalcValue(id) {
+        const el = document.getElementById(id);
+        return parseFloat(el.value.replace(/,/g, '')) || 0;
+    }
+
+    function updateCalculator() {
+        const price = getCalcValue('calc_price');
+        const downpayment = getCalcValue('calc_downpayment');
+        const apr = parseFloat(document.getElementById('calc_apr').value) || 0;
+        const term = parseInt(document.getElementById('calc_term').value) || 12;
 
         const principal = price - downpayment;
         
@@ -679,7 +688,7 @@
             return;
         }
 
-        const r = (apr / 100) / 12; // monthly interest rate
+        const r = (apr / 100) / 12;
         const n = term;
 
         let monthly = 0;
