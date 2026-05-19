@@ -11,7 +11,7 @@ jobs:
       - name: Subir archivos
         uses: actions/checkout@v4
       - name: Sincronizar con el hosting compartido
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
