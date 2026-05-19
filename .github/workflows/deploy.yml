@@ -8,12 +8,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Subir archivos
+      - name: 🚚 Obtener el código
         uses: actions/checkout@v4
-      - name: Sincronizar con el hosting compartido
+
+      - name: ⚙️ Inyectar Variables de Entorno en .htaccess
+        run: |
+          sed -i "s/__DB_USER_PLACEHOLDER__/${{ secrets.DB_USER }}/g" .htaccess
+          sed -i "s/__DB_PASSWORD_PLACEHOLDER__/${{ secrets.DB_PASSWORD }}/g" .htaccess
+          sed -i "s/__DB_NAME_PLACEHOLDER__/${{ secrets.DB_NAME }}/g" .htaccess
+
+      - name: 🚀 Sincronizar con el hosting compartido
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /rifacandela.site/
+          exclude: "['**/.git*/**', '**/.github/**', 'uploads/**']"

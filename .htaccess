@@ -1,0 +1,5 @@
+# Variables de entorno para la base de datos de producción
+SetEnv DB_HOST localhost
+SetEnv DB_USER __DB_USER_PLACEHOLDER__
+SetEnv DB_PASSWORD __DB_PASSWORD_PLACEHOLDER__
+SetEnv DB_NAME __DB_NAME_PLACEHOLDER__
