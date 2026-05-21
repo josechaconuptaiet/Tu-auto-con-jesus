@@ -1,4 +1,4 @@
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
     const section = document.getElementById('inventory');
     if (!section) return;
 
@@ -79,15 +79,16 @@
         const img = escapeHtml(car.image_path);
         const price = formatPrice(car.price);
         const waLink = buildWhatsAppLink(car);
+        const carLink = (window.baseAppUrl || '/') + 'auto/' + (car.slug || car.id);
 
         card.innerHTML =
-            '<div class="car-img-wrapper">' +
+            '<a href="' + carLink + '" class="car-img-wrapper">' +
                 '<img src="' + img + '" alt="' + title + '">' +
-                '<div class="car-price">' + price + '</div>' +
-            '</div>' +
+            '</a>' +
+            '<div class="car-price" style="position:absolute;top:15px;right:15px;background:linear-gradient(135deg,#f5f5f5,#c0c0c0);color:#111;padding:5px 15px;border-radius:4px;font-weight:800;font-size:1.1rem;box-shadow:0 4px 10px rgba(0,0,0,0.2);border:1px solid #fff;z-index:10;">' + price + '</div>' +
             '<div class="car-info">' +
-                '<h3>' + title + '</h3>' +
-                '<a href="' + waLink + '" target="_blank" rel="noopener" class="btn btn-primary btn-details" style="display:block;text-align:center;">DETALLES</a>' +
+                '<h3><a href="' + carLink + '">' + title + '</a></h3>' +
+                '<a href="' + carLink + '" class="btn btn-primary" style="display:block;text-align:center;width:100%;background-color:#0B192C;color:white;padding:12px;border:none;border-radius:4px;font-weight:bold;text-transform:uppercase;cursor:pointer;text-decoration:none;">VER DETALLES</a>' +
             '</div>';
 
         return card;
@@ -163,4 +164,4 @@
     }
 
     loadCars({ append: false });
-})();
+});

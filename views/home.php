@@ -116,6 +116,13 @@
             <div class="logo">
                 <img src="<?= htmlspecialchars(get_asset_url($settings['logo'] ?? '')) ?>" alt="Tu Auto Con Jesus Guerrero">
             </div>
+            <nav class="header-nav">
+                <a href="<?= $base_url ?>">Inicio</a>
+                <a href="<?= $base_url ?>catalogo">Catálogo</a>
+            </nav>
+            <button class="hamburger" id="hamburger" aria-label="Menú">
+                <span></span><span></span><span></span>
+            </button>
             <div class="social-icons">
                 <?php if(!empty($settings['social_instagram'])): ?>
                     <a href="<?= htmlspecialchars($settings['social_instagram']) ?>" target="_blank"><i class="fab fa-instagram"></i></a>
@@ -132,6 +139,14 @@
             </div>
         </div>
     </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+    <nav class="mobile-nav" id="mobileNav">
+        <button class="mobile-nav-close" id="mobileNavClose">&times;</button>
+        <a href="<?= $base_url ?>">Inicio</a>
+        <a href="<?= $base_url ?>catalogo">Catálogo</a>
+    </nav>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -163,7 +178,7 @@
         </div>
         <?php endif; ?>
         <div class="container hero-content">
-            <h1 class="hero-title">DESCUBRE LA EXCELENCIA<br><span>SOBRE RUEDAS</span></h1>
+            <h1 class="hero-title">ASESORÍA QUE MARCA<br><span> LA DIFERENCIA</span></h1>
             <a href="#inventory" class="btn btn-primary hero-btn">VER INVENTARIO DE ÉLITE</a>
         </div>
     </section>
@@ -227,48 +242,57 @@
         <script type="application/json" id="wa-message-template"><?= json_encode($wa_message_template, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?></script>
         <div class="container">
 
-            <?php
-                $stmt = $pdo->query("SELECT image_path, title, price FROM cars ORDER BY id DESC LIMIT 3");
-                $recientes = $stmt->fetchAll();
-            ?>
-            <div class="cars-layout">
-                <div class="layout-column inventory-catalog">
-                    <div class="section-header inventory-header">
-                        <h2>INVENTARIO</h2>
-                        <div class="car-search-wrap">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <input type="search" id="car-search" class="car-search-input" placeholder="Buscar por marca, modelo..." autocomplete="off">
-                        </div>
-                    </div>
-
-                    <p id="cars-empty" class="cars-empty" hidden>No hay vehículos que coincidan con tu búsqueda.</p>
-                    <div id="cars-grid" class="cars-grid grid-2x2"></div>
-
-                    <div class="cars-load-more-wrap">
-                        <button type="button" id="cars-load-more" class="btn btn-primary cars-load-more" hidden>Cargar más</button>
-                    </div>
-                </div>
-
-                <div class="layout-column anadido-recientemente">
-                    <div class="section-header center">
-                        <h2>AÑADIDO RECIENTEMENTE</h2>
-                    </div>
-                    <div class="vertical-list">
-                        <?php if (empty($recientes)): ?>
-                            <p class="cars-empty">No hay vehículos recientes.</p>
-                        <?php else: foreach ($recientes as $car): 
-                            $precio_fmt = '$' . number_format((float)$car['price'], 2);
-                            $msg = str_replace(['{nombre}', '{precio}'], [$car['title'], $precio_fmt], $wa_message_template);
-                            $wa_link = 'https://wa.me/' . $wa_num_inventory . '?text=' . rawurlencode($msg);
-                        ?>
-                            <a href="<?= htmlspecialchars($wa_link) ?>" target="_blank" rel="noopener" class="small-car-card">
-                                <img src="<?= htmlspecialchars($car['image_path']) ?>" alt="<?= htmlspecialchars($car['title']) ?>">
-                            </a>
-                        <?php endforeach; endif; ?>
-                    </div>
+            <!-- Search Bar -->
+            <div class="section-header inventory-header" style="margin-bottom: 30px;">
+                <h2>EXPLORA POR MARCA</h2>
+                <a href="<?= $base_url ?>catalogo" class="btn-catalog-link"><i class="fas fa-th-large"></i> Ver Catálogo Completo</a>
+                <div class="car-search-wrap">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" id="car-search" class="car-search-input" placeholder="Buscar por marca, modelo..." autocomplete="off">
                 </div>
             </div>
 
+            <div class="cars-layout">
+                <div>
+                    <!-- Brand Sections Container -->
+                    <div id="brand-sections">
+                        <p style="text-align:center; color:#64748b; padding:40px 0;">Cargando marcas...</p>
+                    </div>
+
+                    <!-- Search Results (hidden by default) -->
+                    <div id="search-results" hidden>
+                        <p id="search-empty" class="cars-empty" hidden>No hay vehículos que coincidan con tu búsqueda.</p>
+                        <div id="search-grid" class="cars-grid grid-2x2"></div>
+                        <div class="cars-load-more-wrap">
+                            <button type="button" id="search-load-more" class="btn btn-primary cars-load-more" hidden>Cargar más</button>
+                        </div>
+                    </div>
+                </div>
+
+                <?php
+                    $stmt_recent = $pdo->prepare("SELECT id, title, slug, price, image_path FROM cars WHERE status = 'active' ORDER BY id DESC LIMIT 3");
+                    $stmt_recent->execute();
+                    $recent_cars = $stmt_recent->fetchAll(PDO::FETCH_ASSOC);
+                ?>
+                <?php if (!empty($recent_cars)): ?>
+                <aside class="anadido-recientemente">
+                    <div class="section-header">
+                        <h2><i class="fas fa-clock"></i> Últimos Añadidos</h2>
+                    </div>
+                    <div class="vertical-list">
+                        <?php foreach ($recent_cars as $rc): 
+                            $img = get_asset_url($rc['image_path']);
+                            $price_fmt = '$' . number_format((float)$rc['price'], 0, '', ',');
+                            $link = $base_url . 'auto/' . htmlspecialchars($rc['slug']);
+                        ?>
+                        <a href="<?= $link ?>" class="small-car-card">
+                            <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($rc['title']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </aside>
+                <?php endif; ?>
+            </div>
 
         </div>
     </section>
@@ -306,7 +330,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script src="<?= $base_url ?>assets/js/main.js?v=<?= time() ?>"></script>
-    <script src="<?= $base_url ?>assets/js/inventory.js?v=<?= time() ?>"></script>
+    <script src="<?= $base_url ?>assets/js/home-brands.js?v=<?= time() ?>"></script>
 
     <!-- Appointment Modal -->
     <div id="appointmentModal" class="modal-overlay">

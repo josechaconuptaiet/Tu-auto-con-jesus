@@ -1,5 +1,17 @@
 # Variables de entorno para la base de datos de producción
 SetEnv DB_HOST localhost
-SetEnv DB_USER __DB_USER_PLACEHOLDER__
-SetEnv DB_PASSWORD __DB_PASSWORD_PLACEHOLDER__
-SetEnv DB_NAME __DB_NAME_PLACEHOLDER__
+SetEnv DB_USER root
+SetEnv DB_PASSWORD 
+SetEnv DB_NAME tuautoconjesus
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Permitir acceso directo a archivos y directorios existentes
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Redirigir todo lo demás a index.php con la ruta en query string
+    RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
+</IfModule>

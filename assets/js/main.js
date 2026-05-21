@@ -64,3 +64,26 @@ if(slides.length > 1) {
     startInterval();
 }
 
+// Mobile Menu Toggle
+var hamburger = document.getElementById('hamburger');
+var mobileNav = document.getElementById('mobileNav');
+var mobileNavOverlay = document.getElementById('mobileNavOverlay');
+var mobileNavClose = document.getElementById('mobileNavClose');
+
+function toggleMobileMenu() {
+    hamburger.classList.toggle('active');
+    mobileNav.classList.toggle('show');
+    mobileNavOverlay.classList.toggle('show');
+    document.body.style.overflow = mobileNav.classList.contains('show') ? 'hidden' : '';
+}
+
+if (hamburger) {
+    hamburger.addEventListener('click', toggleMobileMenu);
+}
+if (mobileNavClose) {
+    mobileNavClose.addEventListener('click', toggleMobileMenu);
+}
+if (mobileNavOverlay) {
+    mobileNavOverlay.addEventListener('click', toggleMobileMenu);
+}
+

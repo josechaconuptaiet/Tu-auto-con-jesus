@@ -2,7 +2,7 @@
 $host = '127.0.0.1';
 $user = 'root';
 $password = '';
-$dbname = 'dealership_db';
+$dbname = 'tuautoconjesus';
 
 try {
     $pdo = new PDO("mysql:host=$host", $user, $password);
@@ -35,13 +35,108 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // Crear tabla cars
-    $pdo->exec("CREATE TABLE IF NOT EXISTS cars (
+    // Disable foreign key checks for table recreation
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+
+    // Crear tabla marcas
+    $pdo->exec("DROP TABLE IF EXISTS marcas");
+    $pdo->exec("CREATE TABLE marcas (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        slug VARCHAR(100) UNIQUE NOT NULL,
+        logo VARCHAR(255) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // Crear tabla cars (renovada)
+    $pdo->exec("DROP TABLE IF EXISTS cars");
+    $pdo->exec("CREATE TABLE cars (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        marca_id INT NOT NULL,
+        modelo VARCHAR(100) NOT NULL,
         title VARCHAR(100) NOT NULL,
+        slug VARCHAR(150) UNIQUE NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         image_path VARCHAR(255) NOT NULL,
-        description TEXT
+        description TEXT,
+        status ENUM('active', 'draft', 'sold') DEFAULT 'active',
+        featured BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+    )");
+
+    // Crear tabla cars (renovada)
+    $pdo->exec("DROP TABLE IF EXISTS cars");
+    $pdo->exec("CREATE TABLE cars (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        marca_id INT NOT NULL,
+        modelo VARCHAR(100) NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        slug VARCHAR(150) UNIQUE NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        image_path VARCHAR(255) NOT NULL,
+        description TEXT,
+        status ENUM('active', 'draft', 'sold') DEFAULT 'active',
+        featured BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE CASCADE
+    )");
+
+    // Crear tabla spec_fields
+    $pdo->exec("CREATE TABLE IF NOT EXISTS spec_fields (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        slug VARCHAR(100) UNIQUE NOT NULL,
+        tipo ENUM('text', 'number', 'select', 'color') DEFAULT 'text',
+        opciones JSON NULL,
+        obligatorio BOOLEAN DEFAULT FALSE,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // Crear tabla car_specs
+    $pdo->exec("CREATE TABLE IF NOT EXISTS car_specs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        car_id INT NOT NULL,
+        spec_field_id INT NULL,
+        etiqueta VARCHAR(100),
+        valor TEXT NOT NULL,
+        sort_order INT DEFAULT 0,
+        FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE,
+        FOREIGN KEY (spec_field_id) REFERENCES spec_fields(id) ON DELETE SET NULL
+    )");
+
+    // Crear tabla car_images
+    $pdo->exec("CREATE TABLE IF NOT EXISTS car_images (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        car_id INT NOT NULL,
+        image_path VARCHAR(255) NOT NULL,
+        is_primary BOOLEAN DEFAULT FALSE,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE
+    )");
+
+    // Crear tabla car_videos
+    $pdo->exec("CREATE TABLE IF NOT EXISTS car_videos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        car_id INT NOT NULL,
+        url VARCHAR(255) NOT NULL,
+        titulo VARCHAR(200),
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE
+    )");
+
+    // Crear tabla car_components
+    $pdo->exec("CREATE TABLE IF NOT EXISTS car_components (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        car_id INT NULL,
+        component_type VARCHAR(50) NOT NULL,
+        config JSON NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        sort_order INT DEFAULT 0,
+        FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE
     )");
 
     // Crear tabla appointments
@@ -137,6 +232,53 @@ try {
             $insert->execute($sch);
         }
     }
+
+    // Insertar campos de especificación por defecto si está vacío
+    $stmt = $pdo->query("SELECT COUNT(*) FROM spec_fields");
+    if ($stmt->fetchColumn() == 0) {
+        $default_specs = [
+            ['Marca', 'marca', 'select', '["Toyota", "Chevrolet"]', true, 1],
+            ['Modelo', 'modelo', 'text', null, true, 2],
+            ['Año', 'anio', 'number', null, true, 3],
+            ['Color', 'color', 'text', null, true, 4],
+            ['Transmisión', 'transmision', 'select', '["Automática", "Manual", "CVT"]', true, 5],
+            ['Combustible', 'combustible', 'select', '["Gasolina", "Diésel", "Híbrido", "Eléctrico"]', true, 6],
+            ['Kilometraje', 'kilometraje', 'number', null, false, 7],
+            ['Motor', 'motor', 'text', null, false, 8],
+            ['Tracción', 'traccion', 'select', '["Delantera", "Trasera", "4x4", "AWD"]', false, 9],
+            ['Puertas', 'puertas', 'number', null, false, 10],
+            ['Cilindrada', 'cilindrada', 'text', null, false, 11],
+        ];
+        $insert = $pdo->prepare("INSERT INTO spec_fields (nombre, slug, tipo, opciones, obligatorio, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        foreach ($default_specs as $sp) {
+            $insert->execute($sp);
+        }
+    }
+
+    // Insertar componentes por defecto (template global) si está vacío
+    $stmt = $pdo->query("SELECT COUNT(*) FROM car_components WHERE car_id IS NULL");
+    if ($stmt->fetchColumn() == 0) {
+        $default_components = [
+            ['hero_slider', '{"show_title": true, "show_price": true}', true, 1],
+            ['specs_destacadas', '{"max_items": 6}', true, 2],
+            ['descripcion', '{}', true, 3],
+            ['exterior_interior', '{"exterior_title":"Exterior","exterior_description":"","exterior_image":"","interior_title":"Interior","interior_description":"","interior_image":""}', true, 4],
+            ['image_gallery', '{"layout": "grid"}', true, 5],
+            ['specs_tabla', '{}', true, 6],
+            ['video', '{}', true, 7],
+            ['cta_whatsapp', '{}', true, 8],
+            ['calculadora', '{}', true, 9],
+            ['autos_relacionados', '{"max_items": 4}', true, 10],
+            ['custom_html', '{"html":"","css":"","js":"","images":[]}', false, 11],
+        ];
+        $insert = $pdo->prepare("INSERT INTO car_components (car_id, component_type, config, is_active, sort_order) VALUES (NULL, ?, ?, ?, ?)");
+        foreach ($default_components as $comp) {
+            $insert->execute($comp);
+        }
+    }
+
+    // Re-enable foreign key checks
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 
     echo "Base de datos y tablas creadas exitosamente.\n";
 } catch (PDOException $e) {
