@@ -18,7 +18,7 @@
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= $base_url ?>assets/css/style.css">
+    <link rel="stylesheet" href="<?= $base_url ?>assets/css/style.css?v=<?= time() ?>">
     <style>
         /* Responsive styles for Flatpickr appointment picker */
         @media (max-width: 768px) {
@@ -242,6 +242,30 @@
         <script type="application/json" id="wa-message-template"><?= json_encode($wa_message_template, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?></script>
         <div class="container">
 
+            <?php
+                $stmt_recent = $pdo->prepare("SELECT id, title, slug, price, image_path FROM cars WHERE status = 'active' ORDER BY id DESC LIMIT 3");
+                $stmt_recent->execute();
+                $recent_cars = $stmt_recent->fetchAll(PDO::FETCH_ASSOC);
+            ?>
+            <?php if (!empty($recent_cars)): ?>
+            <div class="anadido-recientemente">
+                <div class="section-header">
+                    <h2><i class="fas fa-clock"></i> Últimos Añadidos</h2>
+                </div>
+                <div class="recent-carousel">
+                    <?php foreach ($recent_cars as $rc): 
+                        $img = get_asset_url($rc['image_path']);
+                        $price_fmt = '$' . number_format((float)$rc['price'], 0, '', ',');
+                        $link = $base_url . 'auto/' . htmlspecialchars($rc['slug']);
+                    ?>
+                    <a href="<?= $link ?>" class="small-car-card">
+                        <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($rc['title']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Search Bar -->
             <div class="section-header inventory-header" style="margin-bottom: 30px;">
                 <h2>EXPLORA POR MARCA</h2>
@@ -252,46 +276,18 @@
                 </div>
             </div>
 
-            <div class="cars-layout">
-                <div>
-                    <!-- Brand Sections Container -->
-                    <div id="brand-sections">
-                        <p style="text-align:center; color:#64748b; padding:40px 0;">Cargando marcas...</p>
-                    </div>
+            <!-- Brand Sections Container -->
+            <div id="brand-sections">
+                <p style="text-align:center; color:#64748b; padding:40px 0;">Cargando marcas...</p>
+            </div>
 
-                    <!-- Search Results (hidden by default) -->
-                    <div id="search-results" hidden>
-                        <p id="search-empty" class="cars-empty" hidden>No hay vehículos que coincidan con tu búsqueda.</p>
-                        <div id="search-grid" class="cars-grid grid-2x2"></div>
-                        <div class="cars-load-more-wrap">
-                            <button type="button" id="search-load-more" class="btn btn-primary cars-load-more" hidden>Cargar más</button>
-                        </div>
-                    </div>
+            <!-- Search Results (hidden by default) -->
+            <div id="search-results" hidden>
+                <p id="search-empty" class="cars-empty" hidden>No hay vehículos que coincidan con tu búsqueda.</p>
+                <div id="search-grid" class="cars-grid grid-3x3"></div>
+                <div class="cars-load-more-wrap">
+                    <button type="button" id="search-load-more" class="btn btn-primary cars-load-more" hidden>Cargar más</button>
                 </div>
-
-                <?php
-                    $stmt_recent = $pdo->prepare("SELECT id, title, slug, price, image_path FROM cars WHERE status = 'active' ORDER BY id DESC LIMIT 3");
-                    $stmt_recent->execute();
-                    $recent_cars = $stmt_recent->fetchAll(PDO::FETCH_ASSOC);
-                ?>
-                <?php if (!empty($recent_cars)): ?>
-                <aside class="anadido-recientemente">
-                    <div class="section-header">
-                        <h2><i class="fas fa-clock"></i> Últimos Añadidos</h2>
-                    </div>
-                    <div class="vertical-list">
-                        <?php foreach ($recent_cars as $rc): 
-                            $img = get_asset_url($rc['image_path']);
-                            $price_fmt = '$' . number_format((float)$rc['price'], 0, '', ',');
-                            $link = $base_url . 'auto/' . htmlspecialchars($rc['slug']);
-                        ?>
-                        <a href="<?= $link ?>" class="small-car-card">
-                            <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($rc['title']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
-                        </a>
-                        <?php endforeach; ?>
-                    </div>
-                </aside>
-                <?php endif; ?>
             </div>
 
         </div>

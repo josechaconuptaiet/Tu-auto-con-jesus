@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchBrandPage(brandId) {
-        var limit = 2;
+        var limit = 3;
         var offset = 0;
         if (brandId !== null) {
             offset = (brandPage[brandId] || 0) * limit;
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         sectionEl.appendChild(header);
 
                         gridEl = document.createElement('div');
-                        gridEl.className = 'cars-grid grid-2x2';
+                        gridEl.className = 'cars-grid grid-3x3';
                         gridEl.id = 'brand-grid-' + brand.id;
                         sectionEl.appendChild(gridEl);
 
